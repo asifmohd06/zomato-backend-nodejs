@@ -3,8 +3,13 @@ const router = express.Router();
 const city = require("../models/cities");
 const multer = require("multer");
 const restaurant = require("../models/restaurants");
+const user = require("../models/users");
+
+//middlewares
+const { isAlreadyLoggedIn, logoutUser } = require("../middleware");
 
 const { storage } = require("../cloudinary");
+const passport = require("passport");
 const upload = multer({ storage });
 
 const capitalize = (word) => {
@@ -77,4 +82,33 @@ router.post(
     }
   }
 );
+
+router.post("/restaurants/register", async (req, res, next) => {
+  try {
+    const { username, password, email } = req.body;
+    const newUser = new user({ email, username }); // creating a mongoose database using the User schema
+    const regUser = await user.register(newUser, password); //regitering, ie adding the password field with hashed password from passport
+    req.logIn(regUser, (err) => {
+      // req.login to login the registered user
+      if (err) return next(err); // req.login requires a callback as it is asynchrounous, but cant be awaited
+      res.send("success");
+    });
+  } catch (e) {
+    res.send(`error = ${e.message}`);
+  }
+});
+router.post(
+  "/restaurants/login",
+  isAlreadyLoggedIn,
+  passport.authenticate("local", {
+    failureFlash: true,
+    failureRedirect: "/",
+    keepSessionInfo: true,
+  }),
+  (req, res) => {
+    res.send("you just logged in");
+  }
+);
+
+router.get("/restaurants/logout", logoutUser);
 module.exports = router;
