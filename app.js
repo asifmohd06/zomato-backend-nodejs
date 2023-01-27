@@ -1,11 +1,13 @@
 require("dotenv").config();
 
+// basic setup
 const express = require("express");
 const mongoose = require("mongoose");
 const dbUrl = process.env.MONGO_DB_URL;
 const routes = require("./routes/routes");
 const cors = require("cors");
 
+//Authentication
 const session = require("express-session");
 const passport = require("passport");
 const localStrategy = require("passport-local");
@@ -33,6 +35,7 @@ app.use(
   })
 );
 
+//for auth
 const store = mongoDbStore.create({
   mongoUrl: dbUrl,
   touchAfter: 24 * 3600,
@@ -61,6 +64,7 @@ app.use(passport.session());
 passport.use(new localStrategy(user.authenticate()));
 passport.serializeUser(user.serializeUser());
 passport.deserializeUser(user.deserializeUser());
+//
 
 app.listen(5000, () => {
   console.log("listening to port 5000");
