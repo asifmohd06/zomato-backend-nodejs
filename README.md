@@ -15,7 +15,8 @@
 - *MongoDB account*
 - *Cloudinary account*
 
-## *Commands*
+## *Commands*![Screenshot 2023-01-29 at 11-30-56 React App](https://user-images.githubusercontent.com/117713482/215310421-80c873dd-2738-4aff-8325-cb940b9eba1a.png)
+
 
 - npm i - *installs all required dependancies*
 - npm start - *starts the server on localhost 5000*
@@ -35,8 +36,7 @@
 			 - password
 			
 	- /restaurants/add - *for adding new restaurant __( should be formData ) 
-			![params]([https://res.cloudinary.com/fakename/image/upload/v1674972268/Screenshot_2023-01-29_at_11-30-56_React_App_cgepks.png](https://res.cloudinary.com/fakename/image/upload/v1674972268/Screenshot_2023-01-29_at_11-30-56_React_App_cgepks.png)
-			![code]([https://res.cloudinary.com/fakename/image/upload/v1674974788/rest_wes7u2.png](https://res.cloudinary.com/fakename/image/upload/v1674974788/rest_wes7u2.png)
+		
 	 - /restaurants/:id/addmenu - *for adding menu __( should be formData )
 		 ![menuparams]([https://res.cloudinary.com/fakename/image/upload/v1674973651/menu_dyuodg.png](https://res.cloudinary.com/fakename/image/upload/v1674973651/menu_dyuodg.png)
 	- /restaurants/login - *for logging in*
