@@ -4,10 +4,10 @@
 
 - *backend for zomato react clone for creating new restaurant data , adding menu, authenticating users, uploding images of restaurants and menu items*
 - *currently in development*
-- *build on nodejs and express
-- *database used - mongoDB
-- *image resources are hosted on cloudinary
-- *authentication is done using passport node package 
+- *build on nodejs and express*
+- *database used - mongoDB*
+- *image resources are hosted on cloudinary*
+- *authentication is done using passport node package*
 
 ## *pre-requisites*
 
@@ -24,7 +24,7 @@
 ## *Api Endpoints*
 
 - #### get
-	- /cities - *sends all the city data
+	- /cities - *sends all the city data*
 	- /cities/search/:cityName - *sends details of corresponding city*
 	- /restaurants/logout - *for logging out clients*
 
@@ -35,13 +35,13 @@
 			 - username
 			 - password
 			
-	- /restaurants/add - *for adding new restaurant __( should be formData )__ 
+	- /restaurants/add - *for adding new restaurant __( should be formData )__*
 
 		![menuform](https://res.cloudinary.com/fakename/image/upload/v1674972268/Screenshot_2023-01-29_at_11-30-56_React_App_cgepks.png)
 		
 		![formparams](https://res.cloudinary.com/fakename/image/upload/v1674974788/rest_wes7u2.png)
 		
-	 - /restaurants/:id/addmenu - *for adding menu __( should be formData )__
+	 - /restaurants/:id/addmenu - *for adding menu __( should be formData )__*
 	 
 		 ![menuparams](https://res.cloudinary.com/fakename/image/upload/v1674973651/menu_dyuodg.png)
 		 
