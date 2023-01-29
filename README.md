@@ -24,28 +24,28 @@
 ## *Api Endpoints*
 
 - #### get
-	- /cities - *sends all the city data*
-	- /cities/search/:cityName - *sends details of corresponding city*
-	- /restaurants/logout - *for logging out clients*
+	- api/cities - *sends all the city data*
+	- api/cities/search/:cityName - *sends details of corresponding city*
+	- api/restaurants/logout - *for logging out clients*
 
 - #### Post
-	- /restaurants/register - *for registering new account*
+	- api/restaurants/register - *for registering new account*
 		- required fields
 			 - mail id
 			 - username
 			 - password
 			
-	- /restaurants/add - *for adding new restaurant __( should be formData )__*
+	- api/restaurants/add - *for adding new restaurant __( should be formData )__*
 
 		![menuform](https://res.cloudinary.com/fakename/image/upload/v1674972268/Screenshot_2023-01-29_at_11-30-56_React_App_cgepks.png)
 		
 		![formparams](https://res.cloudinary.com/fakename/image/upload/v1674974788/rest_wes7u2.png)
 		
-	 - /restaurants/:id/addmenu - *for adding menu __( should be formData )__*
+	 - api/restaurants/:id/addmenu - *for adding menu __( should be formData )__*
 	 
 		 ![menuparams](https://res.cloudinary.com/fakename/image/upload/v1674973651/menu_dyuodg.png)
 		 
-	- /restaurants/login - *for logging in*
+	- api/restaurants/login - *for logging in*
 		- required fields
 			- username
 			- password
