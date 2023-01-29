@@ -1,6 +1,6 @@
 # zomato-backend-nodejs
 
-## _what is this project
+## *what is this project*
 
 - *backend for zomato react clone for creating new restaurant data , adding menu, authenticating users, uploding images of restaurants and menu items*
 - *currently in development*
@@ -9,7 +9,7 @@
 - *image resources are hosted on cloudinary
 - *authentication is done using passport node package 
 
-## *pre-requisites
+## *pre-requisites*
 
 - *NodeJs*
 - *MongoDB account*
@@ -20,7 +20,7 @@
 - npm i - *installs all required dependancies*
 - npm start - *starts the server on localhost 5000*
 
-## _Api Endpoints
+## *Api Endpoints
 
 - #### get
 	- /cities - *sends all the city data
@@ -44,6 +44,6 @@
 			1. username
 			2. password
 
-##### *currently full CRUD functions are not supported
+##### *currently full CRUD functions are not supported*
 only creating and reading is available as of now
 rest will be updated soon
