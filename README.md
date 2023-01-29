@@ -42,7 +42,9 @@
 		![formparams](https://res.cloudinary.com/fakename/image/upload/v1674974788/rest_wes7u2.png)
 		
 	 - /restaurants/:id/addmenu - *for adding menu __( should be formData )__
+	 
 		 ![menuparams](https://res.cloudinary.com/fakename/image/upload/v1674973651/menu_dyuodg.png)
+		 
 	- /restaurants/login - *for logging in*
 		- required fields
 			- username
