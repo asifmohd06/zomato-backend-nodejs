@@ -3,7 +3,12 @@ const user = require("./models/users");
 module.exports.isAlreadyLoggedIn = (req, res, next) => {
   //middleware to prevent a logged in user from accessing the login page
   if (req.isAuthenticated()) {
-    res.send("you are already logged in");
+    res.status(200).json({
+      success: true,
+      isAlreadyLoggedIn: true,
+      message: "already logged in",
+      ...req.user,
+    });
   } else {
     next();
   }
@@ -11,7 +16,7 @@ module.exports.isAlreadyLoggedIn = (req, res, next) => {
 
 module.exports.logoutUser = (req, res, next) => {
   req.logOut((err) => {
-    if (err) next(err);
-    res.send("user is logged out");
+    if (err) res.send("something went wrong");
+    res.json({ logout: "success" });
   });
 };

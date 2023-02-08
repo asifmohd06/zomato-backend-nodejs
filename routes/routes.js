@@ -37,7 +37,6 @@ router.post("/restaurants/add", upload.array("image"), async (req, res) => {
     url: f.path,
     fileName: f.filename,
   }));
-
   await newRestaurant.save();
   if (requiredCity.length > 0) {
     const targetCity = requiredCity[0];
@@ -67,7 +66,6 @@ router.post(
         basePrice,
         type,
       };
-      console.log(req.files);
       newmenu.images = req.files.map((f) => ({
         url: f.path,
         fileName: f.filename,
@@ -83,32 +81,51 @@ router.post(
   }
 );
 
-router.post("/restaurants/register", async (req, res, next) => {
+/******************************** CLIENTS AUTH ****************************/
+
+router.post("/clients/register", async (req, res, next) => {
   try {
     const { username, password, email } = req.body;
-    const newUser = new user({ email, username }); // creating a mongoose database using the User schema
-    const regUser = await user.register(newUser, password); //regitering, ie adding the password field with hashed password from passport
-    req.logIn(regUser, (err) => {
-      // req.login to login the registered user
-      if (err) return next(err); // req.login requires a callback as it is asynchrounous, but cant be awaited
-      res.send("success");
-    });
+    const isAlreadyRegistered = await user.find({ email: email });
+    if (isAlreadyRegistered.length < 1) {
+      const newUser = new user({ email, username }); // creating a mongoose database using the User schema
+      const regUser = await user.register(newUser, password); //regitering, ie adding the password field with hashed password from passport
+      req.logIn(regUser, (err) => {
+        // req.login to login the registered user
+        if (err) return next(err); // req.login requires a callback as it is asynchrounous, but cant be awaited
+        const { email, _id, username } = regUser;
+        res.json({ email, _id, username });
+      });
+    } else {
+      res.redirect("http://localhost:3000/clients/login");
+    }
   } catch (e) {
     res.send(`error = ${e.message}`);
   }
 });
 router.post(
-  "/restaurants/login",
+  "/clients/login",
   isAlreadyLoggedIn,
   passport.authenticate("local", {
-    failureFlash: true,
-    failureRedirect: "/",
+    // failureRedirect: "http://localhost:3000/clients/login",
     keepSessionInfo: true,
   }),
   (req, res) => {
-    res.send("you just logged in");
+    res
+      .status(200)
+      .json({ success: true, isAlreadyLoggedIn: false, ...req.user });
   }
 );
+router.post("/clients/auth", (req, res) => {
+  if (req.user) res.status(200).json({ success: true, ...req.user });
+  if (!req.user) res.json({ success: false, message: "authentication failed" });
+});
 
-router.get("/restaurants/logout", logoutUser);
+router.post("/clients/logout", (req, res) => {
+  console.log("inside logout");
+  req.logOut((err) => {
+    if (err) res.send("something went wrong");
+    res.json({ logout: "success" });
+  });
+});
 module.exports = router;

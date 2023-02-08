@@ -9,6 +9,7 @@ const cors = require("cors");
 
 //Authentication
 const session = require("express-session");
+// const session = require("cookie-session");
 const passport = require("passport");
 const localStrategy = require("passport-local");
 const mongoDbStore = require("connect-mongo");
@@ -28,10 +29,12 @@ dataBase.once("connected", () => {
 const app = express();
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
-app.use(cors());
+
 app.use(
   cors({
-    origin: "*",
+    origin: ["http://localhost:3000", "http://127.0.0.1:3000"],
+    methods: ["POST", "PUT", "GET", "OPTIONS", "HEAD"],
+    credentials: true,
   })
 );
 
@@ -59,8 +62,8 @@ const sessionConfig = {
 
 app.use(session(sessionConfig));
 
-app.use(passport.initialize());
 app.use(passport.session());
+app.use(passport.initialize());
 passport.use(new localStrategy(user.authenticate()));
 passport.serializeUser(user.serializeUser());
 passport.deserializeUser(user.deserializeUser());
