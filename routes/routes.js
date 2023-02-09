@@ -30,6 +30,11 @@ router.get("/cities/search/:cityName", async (req, res) => {
 });
 
 router.post("/restaurants/add", upload.array("image"), async (req, res) => {
+  if (!req.user) {
+    res.send("you need to login first");
+    return;
+  }
+  const owner = await user.findById(req.user._id);
   const requestedCity = req.body.city;
   const requiredCity = await city.find({ name: requestedCity });
   const newRestaurant = new restaurant(req.body);
@@ -37,6 +42,9 @@ router.post("/restaurants/add", upload.array("image"), async (req, res) => {
     url: f.path,
     fileName: f.filename,
   }));
+  newRestaurant.owner = req.user._id;
+  owner.restaurants.push(newRestaurant._id);
+  await owner.save();
   await newRestaurant.save();
   if (requiredCity.length > 0) {
     const targetCity = requiredCity[0];
@@ -56,6 +64,10 @@ router.post(
   "/restaurants/:id/addmenu",
   upload.array("image"),
   async (req, res) => {
+    if (!req.user) {
+      res.send("you need to login first");
+      return;
+    }
     const { menuName, basePrice, quantityType, minQuantity, type } = req.body;
     const targetRestaurant = await restaurant.findById({ _id: req.params.id });
     if (targetRestaurant) {
@@ -92,23 +104,23 @@ router.post("/clients/register", async (req, res, next) => {
       const regUser = await user.register(newUser, password); //regitering, ie adding the password field with hashed password from passport
       req.logIn(regUser, (err) => {
         // req.login to login the registered user
-        if (err) return next(err); // req.login requires a callback as it is asynchrounous, but cant be awaited
+        if (err) return res.json({ success: false, ...err }); // req.login requires a callback as it is asynchrounous, but cant be awaited
         const { email, _id, username } = regUser;
-        res.json({ email, _id, username });
+        res.json({ success: true, email, _id, username });
       });
     } else {
-      res.redirect("http://localhost:3000/clients/login");
+      res.json({ success: false, error: "Email is already registered" });
     }
   } catch (e) {
-    res.send(`error = ${e.message}`);
+    res.json({ error: e.message });
   }
 });
 router.post(
   "/clients/login",
   isAlreadyLoggedIn,
   passport.authenticate("local", {
-    // failureRedirect: "http://localhost:3000/clients/login",
     keepSessionInfo: true,
+    failureMessage: true,
   }),
   (req, res) => {
     res
@@ -122,7 +134,10 @@ router.post("/clients/auth", (req, res) => {
 });
 
 router.post("/clients/logout", (req, res) => {
-  console.log("inside logout");
+  if (!req.user) {
+    res.send("you need to login first");
+    return;
+  }
   req.logOut((err) => {
     if (err) res.send("something went wrong");
     res.json({ logout: "success" });
