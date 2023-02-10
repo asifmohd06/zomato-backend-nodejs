@@ -1,4 +1,4 @@
-const user = require("./models/users");
+const clients = require("./models/clients");
 
 module.exports.isAlreadyLoggedIn = (req, res, next) => {
   //middleware to prevent a logged in user from accessing the login page

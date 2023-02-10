@@ -14,7 +14,7 @@ const passport = require("passport");
 const localStrategy = require("passport-local");
 const mongoDbStore = require("connect-mongo");
 const secret = process.env.SECRET;
-const user = require("./models/users");
+const client = require("./models/clients");
 
 mongoose.connect("mongodb://localhost:27017/zomato" || dbUrl);
 const dataBase = mongoose.connection;
@@ -64,9 +64,9 @@ app.use(session(sessionConfig));
 
 app.use(passport.session());
 app.use(passport.initialize());
-passport.use(new localStrategy(user.authenticate()));
-passport.serializeUser(user.serializeUser());
-passport.deserializeUser(user.deserializeUser());
+passport.use(new localStrategy(client.authenticate()));
+passport.serializeUser(client.serializeUser());
+passport.deserializeUser(client.deserializeUser());
 //
 
 app.listen(5000, () => {

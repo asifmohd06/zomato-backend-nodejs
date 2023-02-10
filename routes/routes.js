@@ -3,7 +3,7 @@ const router = express.Router();
 const city = require("../models/cities");
 const multer = require("multer");
 const restaurant = require("../models/restaurants");
-const user = require("../models/users");
+const client = require("../models/clients");
 
 //middlewares
 const { isAlreadyLoggedIn, logoutUser } = require("../middleware");
@@ -34,7 +34,7 @@ router.post("/restaurants/add", upload.array("image"), async (req, res) => {
     res.send("you need to login first");
     return;
   }
-  const owner = await user.findById(req.user._id);
+  const owner = await client.findById(req.user._id);
   const requestedCity = req.body.city;
   const requiredCity = await city.find({ name: requestedCity });
   const newRestaurant = new restaurant(req.body);
@@ -98,10 +98,10 @@ router.post(
 router.post("/clients/register", async (req, res, next) => {
   try {
     const { username, password, email } = req.body;
-    const isAlreadyRegistered = await user.find({ email: email });
+    const isAlreadyRegistered = await client.find({ email: email });
     if (isAlreadyRegistered.length < 1) {
-      const newUser = new user({ email, username }); // creating a mongoose database using the User schema
-      const regUser = await user.register(newUser, password); //regitering, ie adding the password field with hashed password from passport
+      const newUser = new client({ email, username }); // creating a mongoose database using the User schema
+      const regUser = await client.register(newUser, password); //regitering, ie adding the password field with hashed password from passport
       req.logIn(regUser, (err) => {
         // req.login to login the registered user
         if (err) return res.json({ success: false, ...err }); // req.login requires a callback as it is asynchrounous, but cant be awaited

@@ -35,7 +35,7 @@ const restaurantSchema = new schema({
   category: String,
   owner: {
     type: schema.Types.ObjectId,
-    ref: "user",
+    ref: "client",
   },
   images: [imageSchema],
   menu: [menuSchema],
