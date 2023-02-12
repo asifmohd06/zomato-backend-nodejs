@@ -16,7 +16,8 @@ const mongoDbStore = require("connect-mongo");
 const secret = process.env.SECRET;
 const client = require("./models/clients");
 
-mongoose.connect("mongodb://localhost:27017/zomato" || dbUrl);
+mongoose.connect(dbUrl);
+// "mongodb://localhost:27017/zomato" ||
 const dataBase = mongoose.connection;
 
 dataBase.on("error", (error) => {
