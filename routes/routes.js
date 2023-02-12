@@ -31,10 +31,15 @@ router.get("/cities/search/:cityName", async (req, res) => {
 
 router.post("/restaurants/add", upload.array("image"), async (req, res) => {
   if (!req.user) {
-    res.send("you need to login first");
+    res.json({ success: false, message: "You should login first" });
     return;
   }
   const owner = await client.findById(req.user._id);
+  if (owner.restaurants)
+    return res.json({
+      success: false,
+      message: "you already have a restaurant registered",
+    });
   const requestedCity = req.body.city;
   const requiredCity = await city.find({ name: requestedCity });
   const newRestaurant = new restaurant(req.body);
@@ -43,7 +48,7 @@ router.post("/restaurants/add", upload.array("image"), async (req, res) => {
     fileName: f.filename,
   }));
   newRestaurant.owner = req.user._id;
-  owner.restaurants.push(newRestaurant._id);
+  owner.restaurants = newRestaurant._id;
   await owner.save();
   await newRestaurant.save();
   if (requiredCity.length > 0) {
@@ -57,41 +62,45 @@ router.post("/restaurants/add", upload.array("image"), async (req, res) => {
     });
     await newCity.save();
   }
-  res.send(newRestaurant);
+  res.json({ success: true, message: "Successfully added your restaurant" });
 });
 
-router.post(
-  "/restaurants/:id/addmenu",
-  upload.array("image"),
-  async (req, res) => {
-    if (!req.user) {
-      res.send("you need to login first");
-      return;
-    }
-    const { menuName, basePrice, quantityType, minQuantity, type } = req.body;
-    const targetRestaurant = await restaurant.findById({ _id: req.params.id });
-    if (targetRestaurant) {
-      const newmenu = {
-        menuName,
-        quantityType,
-        minQuantity: parseFloat(eval(minQuantity)),
-        basePrice,
-        type,
-      };
-      newmenu.images = req.files.map((f) => ({
-        url: f.path,
-        fileName: f.filename,
-      }));
-
-      targetRestaurant.menu.push(newmenu);
-      await targetRestaurant.save();
-      res.send(targetRestaurant);
-      // await targetRestaurant.save()
-    } else {
-      res.send("no such restaurant");
-    }
+router.post("/restaurants/addmenu", upload.array("image"), async (req, res) => {
+  if (!req.user) {
+    res.json({ success: false, message: "You should login first" });
+    return;
   }
-);
+  const { menuName, basePrice, quantityType, minQuantity, type } = req.body;
+  const restaurantId = req.user.restaurants;
+  const targetRestaurant = await restaurant.findById({ _id: restaurantId });
+  if (targetRestaurant) {
+    const newmenu = {
+      menuName,
+      quantityType,
+      minQuantity: parseFloat(eval(minQuantity)),
+      basePrice,
+      type,
+    };
+    newmenu.images = req.files.map((f) => ({
+      url: f.path,
+      fileName: f.filename,
+    }));
+
+    targetRestaurant.menu.push(newmenu);
+    await targetRestaurant.save();
+    res.json({
+      success: true,
+      message: "Successfully added menu",
+      targetRestaurant,
+    });
+    // await targetRestaurant.save()
+  } else {
+    res.json({
+      success: false,
+      message: "You should add restaurant details first",
+    });
+  }
+});
 
 /******************************** CLIENTS AUTH ****************************/
 

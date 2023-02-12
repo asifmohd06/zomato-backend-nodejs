@@ -7,12 +7,10 @@ const clientSchema = new schema({
     type: String,
     required: true,
   },
-  restaurants: [
-    {
-      type: schema.Types.ObjectId,
-      ref: "restaurant",
-    },
-  ],
+  restaurants: {
+    type: schema.Types.ObjectId,
+    ref: "restaurant",
+  },
 });
 clientSchema.plugin(passportLocalMongoose);
 module.exports = new mongoose.model("client", clientSchema);
