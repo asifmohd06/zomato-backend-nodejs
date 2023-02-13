@@ -7,6 +7,8 @@ const dbUrl = process.env.MONGO_DB_URL;
 const routes = require("./routes/routes");
 const cors = require("cors");
 
+const PORT = process.env.PORT || 5000;
+
 //Authentication
 const session = require("express-session");
 // const session = require("cookie-session");
@@ -70,7 +72,7 @@ passport.serializeUser(client.serializeUser());
 passport.deserializeUser(client.deserializeUser());
 //
 
-app.listen(5000, () => {
+app.listen(PORT, () => {
   console.log("listening to port 5000");
 });
 
