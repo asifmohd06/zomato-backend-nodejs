@@ -35,7 +35,10 @@ app.use(express.json());
 
 app.use(
   cors({
-    origin: "https://zomato06.netlify.app",
+    origin: [
+      "https://zomato06.netlify.app",
+      "https://zomato-zar0.onrender.com",
+    ],
     methods: ["POST", "PUT", "GET", "OPTIONS", "HEAD"],
     credentials: true,
   })
