@@ -33,16 +33,31 @@ const app = express();
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
-app.use(
-  cors({
-    origin: [
-      "https://zomato06.netlify.app",
-      "https://zomato-zar0.onrender.com",
-    ],
-    methods: ["POST", "PUT", "GET", "OPTIONS", "HEAD"],
-    credentials: true,
-  })
-);
+// app.use(
+//   cors({
+//     origin: [
+//       "https://zomato06.netlify.app",
+//       "https://zomato-zar0.onrender.com",
+//     ],
+//     methods: ["POST", "PUT", "GET", "OPTIONS", "HEAD"],
+//     credentials: true,
+//   })
+// );
+
+app.use((req, res, next) => {
+  const origin = req.headers.origin;
+  if (
+    origin === "https://zomato06.netlify.app" ||
+    origin === "https://zomato-zar0.onrender.com"
+  ) {
+    res.header("Access-Control-Allow-Origin", origin);
+  }
+  res.header(
+    "Access-Control-Allow-Headers",
+    "Origin, X-Requested-With, Content-Type, Accept"
+  );
+  next();
+});
 
 //for auth
 const store = mongoDbStore.create({
