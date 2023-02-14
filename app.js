@@ -32,17 +32,34 @@ const app = express();
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
-app.use(
-  cors({
-    origin: [
-      "http://localhost:3000",
-      "http://127.0.0.1:3000",
-      "https://zomato06.netlify.app",
-    ],
-    methods: ["POST", "PUT", "GET", "OPTIONS", "HEAD"],
-    credentials: true,
-  })
-);
+// app.use(
+//   cors({
+//     origin: [
+//       "http://localhost:3000",
+//       "http://127.0.0.1:3000",
+//       "https://zomato06.netlify.app",
+//     ],
+//     methods: ["POST", "PUT", "GET", "OPTIONS", "HEAD"],
+//     credentials: true,
+//   })
+// )
+app.use((req, res, next) => {
+  const origin = req.headers.origin;
+  if (
+    origin === "http://localhost:3000" ||
+    origin === "http://127.0.0.1:3000"
+  ) {
+    res.header("Access-Control-Allow-Origin", origin);
+  }
+  res.header("Access-Control-Allow-Credentials", "true");
+  res.header(
+    "Access-Control-Allow-Headers",
+    "Origin, X-Requested-With, Content-Type, Accept"
+  );
+  next();
+});
+
+app.set("trust proxy", 1); // trust first proxy
 
 //for auth
 const store = mongoDbStore.create({
@@ -61,6 +78,8 @@ const sessionConfig = {
   saveUninitialized: true,
   cookie: {
     httponly: true,
+    sameSite: "none",
+    secure: true,
     expires: Date.now() + 1000 * 60 * 60 * 24 * 7,
     maxAge: 1000 * 60 * 60 * 24 * 7,
   },
