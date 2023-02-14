@@ -74,6 +74,8 @@ const sessionConfig = {
   name: "session",
   secret,
   resave: true,
+  sameSite: "none",
+  secure: true,
   saveUninitialized: true,
   cookie: {
     httponly: true,
