@@ -6,7 +6,7 @@ const mongoose = require("mongoose");
 const dbUrl = process.env.MONGO_DB_URL;
 const routes = require("./routes/routes");
 const cors = require("cors");
-
+const { shouldSendSameSiteNone } = require("should-send-same-site-none");
 const PORT = process.env.PORT || 5000;
 
 //Authentication
@@ -32,6 +32,7 @@ dataBase.once("connected", () => {
 const app = express();
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
+app.use(shouldSendSameSiteNone);
 
 // app.use(
 //   cors({
