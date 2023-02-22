@@ -1,21 +1,18 @@
 require("dotenv").config();
 
 // basic setup
+const cors = require("cors");
 const express = require("express");
+const jwt = require("jsonwebtoken");
 const mongoose = require("mongoose");
 const dbUrl = process.env.MONGO_DB_URL;
 const routes = require("./routes/routes");
-const cors = require("cors");
+const client = require("./models/clients");
+const jwtSecret = process.env.TOKEN_SECRET;
+const PORT = 5000;
 
 //Authentication
-const session = require("express-session");
 // const session = require("cookie-session");
-const passport = require("passport");
-const localStrategy = require("passport-local");
-const mongoDbStore = require("connect-mongo");
-const secret = process.env.SECRET;
-const client = require("./models/clients");
-
 mongoose.connect("mongodb://localhost:27017/zomato");
 //  || dbUrl
 
@@ -34,67 +31,65 @@ app.use(express.json());
 
 // app.use(
 //   cors({
-//     origin: [
-//       "http://localhost:3000",
-//       "http://127.0.0.1:3000",
-//       "https://zomato06.netlify.app",
-//     ],
+//     origin: ["http://127.0.0.1:3000", "http://localhost:3000"],
 //     methods: ["POST", "PUT", "GET", "OPTIONS", "HEAD"],
-//     credentials: true,
 //   })
-// )
-app.use((req, res, next) => {
-  const origin = req.headers.origin;
-  if (
-    origin === "http://localhost:3000" ||
-    origin === "http://127.0.0.1:3000"
-  ) {
-    res.header("Access-Control-Allow-Origin", origin);
+// );
+
+// app.set("trust proxy", 1);
+// app.use((req, res, next) => {
+//   const origin = req.headers.origin;
+//   if (
+//     origin === "https://zomato06.netlify.app" ||
+//     origin === "https://zomato-zar0.onrender.com" ||
+//     origin === "http://127.0.0.1:3000/"
+//   ) {
+//     res.header("Access-Control-Allow-Origin", origin);
+//   }
+//   res.header("Access-Control-Allow-Credentials", "true");
+//   res.header(
+//     "Access-Control-Allow-Headers",
+//     "Origin, X-Requested-With, Content-Type, Accept"
+//   );
+//   next();
+// });
+app.use(cors());
+app.use(async (req, res, next) => {
+  try {
+    const getTokenFrom = (req) => {
+      console.log(req.authorization);
+      // req.body is not available
+      const authorization = req.body.headers?.Authorization;
+
+      if (authorization && authorization.startsWith("Bearer ")) {
+        console.log(authorization);
+        return authorization.replace("Bearer ", "");
+      }
+      return null;
+    };
+    const isTokenAvailable = getTokenFrom(req);
+    if (
+      isTokenAvailable &&
+      isTokenAvailable !== "undefined" &&
+      isTokenAvailable !== "null"
+    ) {
+      const decodedToken = jwt.verify(isTokenAvailable, jwtSecret);
+      //  if (!decodedToken) return next();
+      const user = await client.findById(decodedToken.id);
+      if (user) {
+        console.log("user true");
+        req.user = user;
+      }
+      next();
+    }
+  } catch (error) {
+    console.log(`error = ${error}`);
   }
-  res.header("Access-Control-Allow-Credentials", "true");
-  res.header(
-    "Access-Control-Allow-Headers",
-    "Origin, X-Requested-With, Content-Type, Accept"
-  );
+
   next();
 });
 
-app.set("trust proxy", 1); // trust first proxy
-
-//for auth
-const store = mongoDbStore.create({
-  mongoUrl: dbUrl,
-  touchAfter: 24 * 3600,
-  crypto: {
-    secret,
-  },
-});
-
-const sessionConfig = {
-  store,
-  name: "session",
-  secret,
-  resave: true,
-  saveUninitialized: true,
-  cookie: {
-    httponly: true,
-    sameSite: "none",
-    secure: true,
-    expires: Date.now() + 1000 * 60 * 60 * 24 * 7,
-    maxAge: 1000 * 60 * 60 * 24 * 7,
-  },
-};
-
-app.use(session(sessionConfig));
-
-app.use(passport.session());
-app.use(passport.initialize());
-passport.use(new localStrategy(client.authenticate()));
-passport.serializeUser(client.serializeUser());
-passport.deserializeUser(client.deserializeUser());
-//
-
-app.listen(5000, () => {
+app.listen(PORT, () => {
   console.log("listening to port 5000");
 });
 

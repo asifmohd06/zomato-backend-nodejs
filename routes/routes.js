@@ -1,15 +1,16 @@
+const multer = require("multer");
+const bcrypt = require("bcrypt");
 const express = require("express");
 const router = express.Router();
+const jwt = require("jsonwebtoken");
 const city = require("../models/cities");
-const multer = require("multer");
-const restaurant = require("../models/restaurants");
 const client = require("../models/clients");
+const restaurant = require("../models/restaurants");
+const jwtSecret = process.env.TOKEN_SECRET;
 
 //middlewares
-const { isAlreadyLoggedIn, logoutUser } = require("../middleware");
-
+const { isAlreadyLoggedIn } = require("../middleware");
 const { storage } = require("../cloudinary");
-const passport = require("passport");
 const upload = multer({ storage });
 
 const capitalize = (word) => {
@@ -30,6 +31,8 @@ router.get("/cities/search/:cityName", async (req, res) => {
 });
 
 router.post("/restaurants/add", upload.array("image"), async (req, res) => {
+  console.log("in route");
+  console.log(req.user);
   if (!req.user) {
     res.json({ success: false, message: "You should login first" });
     return;
@@ -66,6 +69,8 @@ router.post("/restaurants/add", upload.array("image"), async (req, res) => {
 });
 
 router.post("/restaurants/addmenu", upload.array("image"), async (req, res) => {
+  console.log("in route");
+  console.log(req.user);
   if (!req.user) {
     res.json({ success: false, message: "You should login first" });
     return;
@@ -107,49 +112,93 @@ router.post("/restaurants/addmenu", upload.array("image"), async (req, res) => {
 router.post("/clients/register", async (req, res, next) => {
   try {
     const { username, password, email } = req.body;
-    const isAlreadyRegistered = await client.find({ email: email });
-    if (isAlreadyRegistered.length < 1) {
-      const newUser = new client({ email, username }); // creating a mongoose database using the User schema
-      const regUser = await client.register(newUser, password); //regitering, ie adding the password field with hashed password from passport
-      req.logIn(regUser, (err) => {
-        // req.login to login the registered user
-        if (err) return res.json({ success: false, ...err }); // req.login requires a callback as it is asynchrounous, but cant be awaited
-        const { email, _id, username } = regUser;
-        res.json({ success: true, email, _id, username });
+    const isEmailTaken = await client.find({ email });
+    const isUsernameTaken = await client.find({ username });
+    if (isEmailTaken.length < 1 && isUsernameTaken.length < 1) {
+      const saltRounds = 10;
+      const passwordHashed = await bcrypt.hash(password, saltRounds);
+      const newUser = new client({ email, username, passwordHashed }); // creating a mongoose database using the User schema
+      const savedUser = await newUser.save();
+      tokenData = { id: savedUser._id, username: savedUser.username };
+      const token = jwt.sign(tokenData, jwtSecret);
+      res.json({
+        token,
+        id: savedUser._id,
+        username: savedUser.username,
+        email: savedUser.email,
+        success: true,
+        messsage: "successfully created an account",
       });
     } else {
-      res.json({ success: false, error: "Email is already registered" });
+      res.json({
+        success: false,
+        error:
+          isEmailTaken.length > 0
+            ? "Email is already registered"
+            : isUsernameTaken.length > 0
+            ? "Username is already taken"
+            : "oops, please try again later",
+      });
     }
   } catch (e) {
     res.json({ error: e.message });
   }
 });
-router.post(
-  "/clients/login",
-  isAlreadyLoggedIn,
-  passport.authenticate("local", {
-    keepSessionInfo: true,
-    failureMessage: true,
-  }),
-  (req, res) => {
-    res
-      .status(200)
-      .json({ success: true, isAlreadyLoggedIn: false, ...req.user });
+router.post("/clients/login", isAlreadyLoggedIn, async (req, res) => {
+  const { username, password } = req.body;
+  if (!username || !password)
+    return res.json({
+      success: false,
+      error: `${username ? "Password" : "Username"} is required`,
+    });
+  const reqClient = await client.findOne({ username });
+  const passwordCorrect =
+    reqClient === null
+      ? false
+      : await bcrypt.compare(password, reqClient.passwordHashed);
+
+  if (!(reqClient && passwordCorrect)) {
+    return res.json({
+      success: false,
+      error: "invalid username or password",
+    });
   }
-);
+
+  const tokenData = {
+    username: reqClient.username,
+    id: reqClient._id,
+  };
+
+  const token = jwt.sign(tokenData, jwtSecret);
+
+  res.status(200).json({
+    token,
+    username: reqClient.username,
+    email: reqClient.email,
+    success: true,
+    isAlreadyLoggedIn: false,
+  });
+});
 router.post("/clients/auth", (req, res) => {
-  if (req.user) res.status(200).json({ success: true, ...req.user });
-  if (!req.user) res.json({ success: false, message: "authentication failed" });
+  if (!req.user) {
+    return res.json({ success: false, message: "authentication failed" });
+  }
+  if (req.user) {
+    return res.json({
+      success: true,
+      username: req.user.username,
+      email: req.user.email,
+    });
+  }
 });
 
 router.post("/clients/logout", (req, res) => {
   if (!req.user) {
-    res.send("you need to login first");
+    res
+      .status(401)
+      .json({ success: false, message: "you need to login first" });
     return;
   }
-  req.logOut((err) => {
-    if (err) res.send("something went wrong");
-    res.json({ logout: "success" });
-  });
+  res.json({ success: true });
 });
 module.exports = router;

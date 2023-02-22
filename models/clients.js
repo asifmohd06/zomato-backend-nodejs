@@ -1,5 +1,4 @@
 const mongoose = require("mongoose");
-const passportLocalMongoose = require("passport-local-mongoose");
 const schema = mongoose.Schema;
 
 const clientSchema = new schema({
@@ -7,10 +6,17 @@ const clientSchema = new schema({
     type: String,
     required: true,
   },
+  username: {
+    type: String,
+    required: true,
+  },
   restaurants: {
     type: schema.Types.ObjectId,
     ref: "restaurant",
   },
+  passwordHashed: {
+    type: String,
+    required: true,
+  },
 });
-clientSchema.plugin(passportLocalMongoose);
 module.exports = new mongoose.model("client", clientSchema);
