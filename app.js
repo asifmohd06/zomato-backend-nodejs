@@ -57,12 +57,9 @@ app.use(cors());
 app.use(async (req, res, next) => {
   try {
     const getTokenFrom = (req) => {
-      console.log(req.authorization);
-      // req.body is not available
-      const authorization = req.body.headers?.Authorization;
+      const authorization = req.get("Authorization");
 
       if (authorization && authorization.startsWith("Bearer ")) {
-        console.log(authorization);
         return authorization.replace("Bearer ", "");
       }
       return null;
@@ -77,16 +74,16 @@ app.use(async (req, res, next) => {
       //  if (!decodedToken) return next();
       const user = await client.findById(decodedToken.id);
       if (user) {
-        console.log("user true");
         req.user = user;
       }
+      next();
+    } else {
       next();
     }
   } catch (error) {
     console.log(`error = ${error}`);
+    next();
   }
-
-  next();
 });
 
 app.listen(PORT, () => {
@@ -94,3 +91,9 @@ app.listen(PORT, () => {
 });
 
 app.use("/api", routes);
+
+app.use((err, req, res, next) => {
+  console.log("error");
+  console.error(err.stack);
+  res.status(500).json({ message: "Internal server error" });
+});
