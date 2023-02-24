@@ -47,7 +47,7 @@ app.use(
   })
 );
 
-app.set("trust proxy", 1);
+// app.set("trust proxy", 1);
 // app.use((req, res, next) => {
 //   const origin = req.headers.origin;
 //   if (
@@ -78,8 +78,6 @@ const sessionConfig = {
   name: "session",
   secret,
   resave: true,
-  secure: true,
-  sameSite: "none",
   saveUninitialized: true,
   cookie: {
     httponly: true,
