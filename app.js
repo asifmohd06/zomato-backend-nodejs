@@ -34,35 +34,37 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.use(shouldSendSameSiteNone);
 
-app.use(
-  cors({
-    origin: [
-      "https://zomato06.netlify.app",
-      "https://zomato-zar0.onrender.com",
-      "http://127.0.0.1:5000",
-      "http://localhost:5000",
-    ],
-    methods: ["POST", "PUT", "GET", "OPTIONS", "HEAD"],
-    credentials: true,
-  })
-);
+// app.use(
+//   cors({
+//     origin: [
+//       "https://zomato06.netlify.app",
+//       "https://zomato-zar0.onrender.com",
+//       "http://127.0.0.1:5000",
+//       "http://localhost:5000",
+//     ],
+//     methods: ["POST", "PUT", "GET", "OPTIONS", "HEAD"],
+//     credentials: true,
+//   })
+// );
 
-// app.set("trust proxy", 1);
-// app.use((req, res, next) => {
-//   const origin = req.headers.origin;
-//   if (
-//     origin === "https://zomato06.netlify.app" ||
-//     origin === "https://zomato-zar0.onrender.com"
-//   ) {
-//     res.header("Access-Control-Allow-Origin", origin);
-//   }
-//   res.header("Access-Control-Allow-Credentials", "true");
-//   res.header(
-//     "Access-Control-Allow-Headers",
-//     "Origin, X-Requested-With, Content-Type, Accept"
-//   );
-//   next();
-// });
+app.set("trust proxy", 1);
+app.use((req, res, next) => {
+  const origin = req.headers.origin;
+  if (
+    origin === "https://zomato06.netlify.app" ||
+    origin === "https://zomato-zar0.onrender.com" ||
+    origin === "http://127.0.0.1:5000" ||
+    origin === "http://localhost:5000"
+  ) {
+    res.header("Access-Control-Allow-Origin", origin);
+  }
+  res.header("Access-Control-Allow-Credentials", "true");
+  res.header(
+    "Access-Control-Allow-Headers",
+    "Origin, X-Requested-With, Content-Type, Accept"
+  );
+  next();
+});
 
 //for auth
 const store = mongoDbStore.create({
