@@ -28,7 +28,6 @@ dataBase.once("connected", () => {
 const app = express();
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
-app.use(shouldSendSameSiteNone);
 
 // app.use(
 //   cors({
