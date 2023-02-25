@@ -1,24 +1,20 @@
 require("dotenv").config();
 
 // basic setup
+const cors = require("cors");
 const express = require("express");
+const jwt = require("jsonwebtoken");
 const mongoose = require("mongoose");
 const dbUrl = process.env.MONGO_DB_URL;
 const routes = require("./routes/routes");
-const cors = require("cors");
-const { shouldSendSameSiteNone } = require("should-send-same-site-none");
-const PORT = process.env.PORT || 5000;
+const client = require("./models/clients");
+const jwtSecret = process.env.TOKEN_SECRET;
+const PORT = 5000;
 
 //Authentication
-const session = require("express-session");
 // const session = require("cookie-session");
-const passport = require("passport");
-const localStrategy = require("passport-local");
-const mongoDbStore = require("connect-mongo");
-const secret = process.env.SECRET;
-const client = require("./models/clients");
-
-mongoose.connect(dbUrl);
+mongoose.connect("mongodb://localhost:27017/zomato");
+//  || dbUrl
 
 const dataBase = mongoose.connection;
 
@@ -36,69 +32,68 @@ app.use(shouldSendSameSiteNone);
 
 // app.use(
 //   cors({
-//     origin: [
-//       "https://zomato06.netlify.app",
-//       "https://zomato-zar0.onrender.com",
-//       "http://127.0.0.1:5000",
-//       "http://localhost:5000",
-//     ],
+//     origin: ["http://127.0.0.1:3000", "http://localhost:3000"],
 //     methods: ["POST", "PUT", "GET", "OPTIONS", "HEAD"],
-//     credentials: true,
 //   })
 // );
 
-app.set("trust proxy", 1);
-app.use((req, res, next) => {
-  const origin = req.headers.origin;
-  if (
-    origin === "https://zomato06.netlify.app" ||
-    origin === "https://zomato-zar0.onrender.com" ||
-    origin === "http://127.0.0.1:5000" ||
-    origin === "http://localhost:5000"
-  ) {
-    res.header("Access-Control-Allow-Origin", origin);
+// app.set("trust proxy", 1);
+// app.use((req, res, next) => {
+//   const origin = req.headers.origin;
+//   if (
+//     origin === "https://zomato06.netlify.app" ||
+//     origin === "https://zomato-zar0.onrender.com" ||
+//     origin === "http://127.0.0.1:3000/"
+//   ) {
+//     res.header("Access-Control-Allow-Origin", origin);
+//   }
+//   res.header("Access-Control-Allow-Credentials", "true");
+//   res.header(
+//     "Access-Control-Allow-Headers",
+//     "Origin, X-Requested-With, Content-Type, Accept"
+//   );
+//   next();
+// });
+app.use(cors());
+app.use(async (req, res, next) => {
+  try {
+    const getTokenFrom = (req) => {
+      const authorization = req.get("Authorization");
+
+      if (authorization && authorization.startsWith("Bearer ")) {
+        return authorization.replace("Bearer ", "");
+      }
+      return null;
+    };
+    const isTokenAvailable = getTokenFrom(req);
+    if (
+      isTokenAvailable &&
+      isTokenAvailable !== "undefined" &&
+      isTokenAvailable !== "null"
+    ) {
+      const decodedToken = jwt.verify(isTokenAvailable, jwtSecret);
+      //  if (!decodedToken) return next();
+      const user = await client.findById(decodedToken.id);
+      if (user) {
+        req.user = user;
+      }
+      next();
+    } else {
+      next();
+    }
+  } catch (error) {
+    console.log(`error = ${error}`);
+    next();
   }
-  res.header("Access-Control-Allow-Credentials", "true");
-  res.header(
-    "Access-Control-Allow-Headers",
-    "Origin, X-Requested-With, Content-Type, Accept"
-  );
-  next();
 });
-
-//for auth
-const store = mongoDbStore.create({
-  mongoUrl: dbUrl,
-  touchAfter: 24 * 3600,
-  crypto: {
-    secret,
-  },
-});
-
-const sessionConfig = {
-  store,
-  name: "session",
-  secret,
-  resave: true,
-  saveUninitialized: true,
-  cookie: {
-    httponly: true,
-    expires: Date.now() + 1000 * 60 * 60 * 24 * 7,
-    maxAge: 1000 * 60 * 60 * 24 * 7,
-  },
-};
-
-app.use(session(sessionConfig));
-
-app.use(passport.session());
-app.use(passport.initialize());
-passport.use(new localStrategy(client.authenticate()));
-passport.serializeUser(client.serializeUser());
-passport.deserializeUser(client.deserializeUser());
-//
 
 app.listen(PORT, () => {
   console.log("listening to port 5000");
 });
 
 app.use("/api", routes);
+
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(500).json({ message: "Internal server error" });
+});

@@ -1,22 +1,37 @@
 const clients = require("./models/clients");
+const jwt = require("jsonwebtoken");
+const jwtSecret = process.env.TOKEN_SECRET;
 
-module.exports.isAlreadyLoggedIn = (req, res, next) => {
-  //middleware to prevent a logged in user from accessing the login page
-  if (req.isAuthenticated()) {
+//middleware to prevent a logged in user from accessing the login/register page
+module.exports.isAlreadyLoggedIn = async (req, res, next) => {
+  if (req.user) {
     res.status(200).json({
       success: true,
       isAlreadyLoggedIn: true,
       message: "already logged in",
-      ...req.user,
+      username: user.username,
+      email: user.email,
     });
-  } else {
-    next();
   }
+
+  next();
 };
 
-module.exports.logoutUser = (req, res, next) => {
-  req.logOut((err) => {
-    if (err) res.send("something went wrong");
-    res.json({ logout: "success" });
-  });
+// middleware to handle error
+module.exports.asyncError = (handler) => (req, res, next) => {
+  Promise.resolve(handler(req, res, next)).catch(next);
+};
+
+// checks if client has registered a restaurant before ( restaurants per client is limited to 1)
+module.exports.verifyClientRestaurant = async (req, res, next) => {
+  if (!req.user) {
+    return res.json({ success: false, message: "You should login first" });
+  }
+  if (req.user.restaurants) {
+    return res.json({
+      success: false,
+      message: "you already have a restaurant registered",
+    });
+  }
+  next();
 };
