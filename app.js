@@ -9,12 +9,13 @@ const dbUrl = process.env.MONGO_DB_URL;
 const routes = require("./routes/routes");
 const client = require("./models/clients");
 const jwtSecret = process.env.TOKEN_SECRET;
-const PORT = 5000;
+const PORT = process.env.PORT || 5000;
 
 //Authentication
 // const session = require("cookie-session");
-mongoose.connect("mongodb://localhost:27017/zomato");
+mongoose.connect(dbUrl);
 //  || dbUrl
+// "mongodb://localhost:27017/zomato";
 
 const dataBase = mongoose.connection;
 
