@@ -128,7 +128,8 @@ router.post(
 
 router.post(
   "/clients/register",
-  asyncError(isAlreadyLoggedIn, async (req, res, next) => {
+  isAlreadyLoggedIn,
+  asyncError(async (req, res, next) => {
     try {
       const { username, password, email } = req.body;
       const isEmailTaken = await client.find({ email });
@@ -166,7 +167,8 @@ router.post(
 );
 router.post(
   "/clients/login",
-  asyncError(isAlreadyLoggedIn, async (req, res) => {
+  isAlreadyLoggedIn,
+  asyncError(async (req, res) => {
     const { username, password } = req.body;
     if (!username || !password)
       return res.json({

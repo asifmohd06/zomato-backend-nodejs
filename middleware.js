@@ -4,7 +4,7 @@ const jwtSecret = process.env.TOKEN_SECRET;
 
 //middleware to prevent a logged in user from accessing the login/register page
 module.exports.isAlreadyLoggedIn = async (req, res, next) => {
-  if (req.user)
+  if (req.user) {
     res.status(200).json({
       success: true,
       isAlreadyLoggedIn: true,
@@ -12,6 +12,8 @@ module.exports.isAlreadyLoggedIn = async (req, res, next) => {
       username: user.username,
       email: user.email,
     });
+  }
+
   next();
 };
 
