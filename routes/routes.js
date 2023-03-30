@@ -7,9 +7,10 @@ const city = require("../models/cities");
 const client = require("../models/clients");
 const restaurant = require("../models/restaurants");
 const jwtSecret = process.env.TOKEN_SECRET;
+const mongoose = require("mongoose");
 
 //middlewares
-const { storage } = require("../cloudinary");
+const { storage, cloudinary } = require("../cloudinary");
 const { asyncError, verifyClientRestaurant } = require("../middleware");
 const { isAlreadyLoggedIn } = require("../middleware");
 
@@ -37,13 +38,12 @@ router.get(
     res.send(data);
   })
 );
-
+// adding restaurant
 router.post(
   "/restaurants/add",
   verifyClientRestaurant,
   upload.array("image"),
   asyncError(async (req, res) => {
-    console.log("in route");
     if (!req.user) {
       return res.json({ success: false, message: "You should login first" });
     }
@@ -82,7 +82,7 @@ router.post(
     });
   })
 );
-
+// adding menu
 router.post(
   "/restaurants/addmenu",
   upload.array("image"),
@@ -91,7 +91,8 @@ router.post(
       res.json({ success: false, message: "You should login first" });
       return;
     }
-    const { menuName, basePrice, quantityType, minQuantity, type } = req.body;
+    const { menuName, basePrice, quantityType, minQuantity, type, category } =
+      req.body;
     const restaurantId = req.user.restaurants;
     const targetRestaurant = await restaurant.findById({ _id: restaurantId });
     if (targetRestaurant) {
@@ -101,6 +102,8 @@ router.post(
         minQuantity: parseFloat(eval(minQuantity)),
         basePrice,
         type,
+        category,
+        enabled: false,
       };
       newmenu.images = req.files.map((f) => ({
         url: f.path,
@@ -114,7 +117,6 @@ router.post(
         message: "Successfully added menu",
         targetRestaurant,
       });
-      // await targetRestaurant.save()
     } else {
       res.json({
         success: false,
@@ -199,6 +201,7 @@ router.post(
       token,
       username: reqClient.username,
       email: reqClient.email,
+      restaurants: reqClient.restaurants,
       success: true,
       isAlreadyLoggedIn: false,
     });
@@ -219,6 +222,108 @@ router.post(
     }
   })
 );
+
+router.post(
+  "/clients/restaurants",
+  asyncError(async (req, res) => {
+    if (!req.user) {
+      return res.json({ success: false, message: "You should login first" });
+    }
+    const restaurant = await req.user.populate("restaurants").then((user) => {
+      return user.restaurants;
+    });
+
+    restaurant
+      ? res.json({ success: true, restaurant })
+      : res.json({ success: false });
+  })
+);
+router.get(
+  "/clients/restaurants/:id/menu/:menuId/details",
+  async (req, res) => {
+    const { id, menuId } = req.params;
+    const targetRes = await restaurant.findById(id);
+    const targetMenu = targetRes.menu.find((menu) => menu.id === menuId);
+    targetMenu
+      ? res.json({ success: true, targetMenu })
+      : res.json({ success: false, message: "No such menu available" });
+  }
+);
+router.put(
+  "/clients/restaurants/:id/editmenu/:menuId",
+  upload.array("image"),
+  async (req, res) => {
+    const { id, menuId } = req.params;
+    const {
+      menuName,
+      basePrice,
+      quantityType,
+      minQuantity,
+      type,
+      category,
+      imagesToDelete,
+    } = req.body;
+
+    const targetRes = await restaurant.findById(id);
+    const targetMenu = await targetRes.menu.find((menu) => menu.id === menuId);
+    // console.log(targetMenu);
+    const imagesToDeleteId = imagesToDelete?.split(",");
+
+    targetMenu.menuName = menuName;
+    targetMenu.basePrice = parseFloat(basePrice);
+    targetMenu.quantityType = quantityType;
+    targetMenu.minQuantity = parseFloat(minQuantity);
+    targetMenu.type = type;
+    targetMenu.category = category;
+
+    req.files?.forEach((file) => {
+      targetMenu.images.push({ url: file.path, fileName: file.filename });
+    });
+
+    if (imagesToDeleteId) {
+      const newImages = targetMenu.images.filter(
+        (image) => !imagesToDeleteId.includes(image._id.toString())
+      );
+      const toDeleteImages = targetMenu.images.filter((image) =>
+        imagesToDeleteId.includes(image._id.toString())
+      );
+      targetMenu.images = newImages;
+      if (targetMenu.images.length < 1) {
+        return res.json({
+          success: false,
+          message: "Menu must contain atleast one image",
+        });
+      }
+      toDeleteImages.map((image) =>
+        cloudinary.uploader.destroy(image.fileName)
+      );
+    }
+    await targetRes.save();
+    const targetMenu2 = await targetRes.menu.find((menu) => menu.id === menuId);
+    targetMenu
+      ? res.json({ success: true, targetMenu2 })
+      : res.json({ success: false, message: "Unable to  fetch menu details" });
+  }
+);
+router.patch("/clients/restaurants/deletemenu", async (req, res) => {
+  const { id, menuId } = req.body;
+  const targetRes = await restaurant.findById(id);
+  const newMenu = targetRes?.menu?.filter(
+    (menu) => menu._id.toString() !== menuId
+  );
+  if (targetRes.menu.length - newMenu.length === 1) {
+    const menuToDelete = targetRes.menu.find(
+      (menu) => menu._id.toString() === menuId
+    );
+    menuToDelete.images.map((image) => {
+      cloudinary.uploader.destroy(image.fileName);
+    });
+    targetRes.menu = newMenu;
+    await targetRes.save();
+    return res.json({ success: true, message: "Successfully deleted menu" });
+  }
+  res.json({ success: false, message: "Unable to delete that menu" });
+});
 
 router.post(
   "/clients/logout",

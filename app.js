@@ -13,7 +13,7 @@ const PORT = 5000;
 
 //Authentication
 // const session = require("cookie-session");
-mongoose.connect(dbUrl);
+mongoose.connect("mongodb://localhost:27017/zomato");
 //  || dbUrl
 // "mongodb://localhost:27017/zomato";
 
@@ -29,6 +29,7 @@ dataBase.once("connected", () => {
 const app = express();
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
+
 
 // app.use(
 //   cors({

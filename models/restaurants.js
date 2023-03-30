@@ -17,12 +17,17 @@ const menuSchema = new schema({
     type: String,
     enum: ["Veg", "Non-veg"],
   },
+  category: {
+    type: String,
+    enum: ["Rice", "Starter", "Main Course", "Drinks", "Pizza"],
+  },
   quantityType: {
     type: String,
     enum: ["Portion", "Full"],
   },
   minQuantity: Number,
   basePrice: Number,
+  enabled: Boolean,
   images: [menuImageSchema],
 });
 
