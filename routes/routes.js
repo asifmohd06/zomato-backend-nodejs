@@ -7,7 +7,6 @@ const city = require("../models/cities");
 const client = require("../models/clients");
 const restaurant = require("../models/restaurants");
 const jwtSecret = process.env.TOKEN_SECRET;
-const mongoose = require("mongoose");
 
 //middlewares
 const { storage, cloudinary } = require("../cloudinary");
@@ -21,11 +20,16 @@ const capitalize = (word) => {
   return word.charAt(0).toUpperCase() + lower.slice(1);
 };
 
-router.get(
+router.post(
   "/cities",
   asyncError(async (req, res) => {
-    const citiesData = await city.find();
-    res.send(citiesData);
+    const { query } = req.body;
+    const citiesData = await city.find({
+      name: { $regex: `${query}`, $options: "i" },
+    });
+    citiesData
+      ? res.json({ success: true, locations: citiesData })
+      : res.json({ success: false });
   })
 );
 
@@ -240,19 +244,19 @@ router.post(
 );
 router.get(
   "/clients/restaurants/:id/menu/:menuId/details",
-  async (req, res) => {
+  asyncError(async (req, res) => {
     const { id, menuId } = req.params;
     const targetRes = await restaurant.findById(id);
     const targetMenu = targetRes.menu.find((menu) => menu.id === menuId);
     targetMenu
       ? res.json({ success: true, targetMenu })
       : res.json({ success: false, message: "No such menu available" });
-  }
+  })
 );
 router.put(
   "/clients/restaurants/:id/editmenu/:menuId",
   upload.array("image"),
-  async (req, res) => {
+  asyncError(async (req, res) => {
     const { id, menuId } = req.params;
     const {
       menuName,
@@ -303,27 +307,34 @@ router.put(
     targetMenu
       ? res.json({ success: true, targetMenu2 })
       : res.json({ success: false, message: "Unable to  fetch menu details" });
-  }
+  })
 );
-router.patch("/clients/restaurants/deletemenu", async (req, res) => {
-  const { id, menuId } = req.body;
-  const targetRes = await restaurant.findById(id);
-  const newMenu = targetRes?.menu?.filter(
-    (menu) => menu._id.toString() !== menuId
-  );
-  if (targetRes.menu.length - newMenu.length === 1) {
-    const menuToDelete = targetRes.menu.find(
-      (menu) => menu._id.toString() === menuId
+router.patch(
+  "/clients/restaurants/deletemenu",
+  asyncError(async (req, res) => {
+    const { id, menuId } = req.body;
+    const targetRes = await restaurant.findById(id);
+    const newMenu = targetRes?.menu?.filter(
+      (menu) => menu._id.toString() !== menuId
     );
-    menuToDelete.images.map((image) => {
-      cloudinary.uploader.destroy(image.fileName);
-    });
-    targetRes.menu = newMenu;
-    await targetRes.save();
-    return res.json({ success: true, message: "Successfully deleted menu" });
-  }
-  res.json({ success: false, message: "Unable to delete that menu" });
-});
+    if (targetRes.menu.length - newMenu.length === 1) {
+      const menuToDelete = targetRes.menu.find(
+        (menu) => menu._id.toString() === menuId
+      );
+      menuToDelete.images.map((image) => {
+        cloudinary.uploader.destroy(image.fileName);
+      });
+      targetRes.menu = newMenu;
+      await targetRes.save();
+      return res.json({
+        success: true,
+        message: "Successfully deleted menu",
+        targetRes,
+      });
+    }
+    res.json({ success: false, message: "Unable to delete that menu" });
+  })
+);
 
 router.post(
   "/clients/logout",
