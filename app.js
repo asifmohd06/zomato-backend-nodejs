@@ -6,7 +6,8 @@ const express = require("express");
 const jwt = require("jsonwebtoken");
 const mongoose = require("mongoose");
 const dbUrl = process.env.MONGO_DB_URL;
-const routes = require("./routes/routes");
+const clientRoute = require("./routes/client");
+const routes = require("./routes/users");
 const client = require("./models/clients");
 const jwtSecret = process.env.TOKEN_SECRET;
 const PORT = 5000;
@@ -29,7 +30,6 @@ dataBase.once("connected", () => {
 const app = express();
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
-
 
 // app.use(
 //   cors({
@@ -60,7 +60,6 @@ app.use(async (req, res, next) => {
   try {
     const getTokenFrom = (req) => {
       const authorization = req.get("Authorization");
-
       if (authorization && authorization.startsWith("Bearer ")) {
         return authorization.replace("Bearer ", "");
       }
@@ -92,7 +91,8 @@ app.listen(PORT, () => {
   console.log("listening to port 5000");
 });
 
-app.use("/api", routes);
+app.use("/api/users", routes);
+app.use("/api/clients", clientRoute);
 
 app.use((err, req, res, next) => {
   console.error(err.stack);
