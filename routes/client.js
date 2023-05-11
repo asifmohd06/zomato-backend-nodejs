@@ -20,7 +20,12 @@ const {
 //middlewares
 const { storage } = require("../cloudinary");
 const upload = multer({ storage });
-const { asyncError, verifyClientRestaurant } = require("../middleware");
+const upload2 = multer();
+const {
+  asyncError,
+  verifyClientRestaurant,
+  // verifyFileCount,
+} = require("../middleware");
 const { isAlreadyLoggedIn } = require("../middleware");
 
 const capitalize = (word) => {
@@ -32,12 +37,17 @@ const capitalize = (word) => {
 router.post(
   "/restaurants/add",
   verifyClientRestaurant,
+  // verifyFileCount,
   upload.array("image"),
   asyncError(addrestaurant)
 );
-
+//fetching res details for edit form
 router.get("/editrestaurant/:id", asyncError(fetchEditrestaurant));
-router.post("/editrestaurant/:id", asyncError(submitEditRestaurant));
+router.post(
+  "/editrestaurant/:id",
+  upload.array("image"),
+  asyncError(submitEditRestaurant)
+);
 // adding menu
 router.post("/restaurants/addmenu", upload.array("image"), asyncError(addMenu));
 
