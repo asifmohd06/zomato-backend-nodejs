@@ -35,3 +35,8 @@ module.exports.verifyClientRestaurant = async (req, res, next) => {
   }
   next();
 };
+
+// module.exports.verifyFileCount = async (req, res, next) => {
+//   console.log(req.file);
+//   next();
+// };

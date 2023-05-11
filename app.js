@@ -6,6 +6,7 @@ const express = require("express");
 const jwt = require("jsonwebtoken");
 const mongoose = require("mongoose");
 const dbUrl = process.env.MONGO_DB_URL;
+const localDbUrl = "mongodb://localhost:27017/zomato";
 const clientRoute = require("./routes/client");
 const routes = require("./routes/users");
 const client = require("./models/clients");
@@ -13,10 +14,7 @@ const jwtSecret = process.env.TOKEN_SECRET;
 const PORT = 5000;
 
 //Authentication
-// const session = require("cookie-session");
 mongoose.connect(dbUrl);
-//  || dbUrl
-// "mongodb://localhost:27017/zomato";
 
 const dataBase = mongoose.connection;
 

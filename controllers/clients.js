@@ -8,6 +8,7 @@ const jwtSecret = process.env.TOKEN_SECRET;
 const { cloudinary } = require("../cloudinary");
 
 const addrestaurant = async (req, res) => {
+  // res.json({ success: false, message: "minimum 3 images required" });
   if (!req.user) {
     return res.json({ success: false, message: "You should login first" });
   }
@@ -54,32 +55,56 @@ const fetchEditrestaurant = async (req, res) => {
     : res.json({ success: false });
 };
 const submitEditRestaurant = async (req, res) => {
+  const { name, city, category, imagesToDelete } = req.body;
+  let imagesToDeleteId = [];
+  if (!imagesToDelete.includes("undefined")) {
+    imagesToDeleteId = imagesToDelete.split(",");
+  }
   const { id } = req.params;
   const targetRes = await restaurant.findById(id);
   if (!targetRes)
     return res.json({ success: false, message: "No such Restaurant" });
-  const isDeleteSuccess = await restaurant
-    .findByIdAndDelete(id)
-    .then(async (deletedRes) => {
-      if (deletedRes) {
-        const targetCity = await city.find({ name: deletedRes.city });
-        targetCity
-          .updateOne(
-            { _id: city._id },
-            { $pull: { restaurants: deletedRes._id } }
-          )
-          .then(async (result) => {
-            if (result) {
-              client.updateOne(
-                { _id: deletedRes.owner },
-                { $pull: { restaurants: deletedRes._id } }
-              );
-            }
-          });
-      }
-    });
-  console.log(isDeleteSuccess);
-  isDeleteSuccess ? res.json({ success: true }) : res.json({ success: false });
+  targetRes.name = name;
+  targetRes.city = city;
+  targetRes.category = category;
+  req.files?.forEach((file) => {
+    targetRes.images.push({ url: file.path, fileName: file.filename });
+  });
+  if (imagesToDeleteId) {
+    const newImages = targetRes.images.filter(
+      (image) => !imagesToDeleteId.includes(image._id.toString())
+    );
+    const toDeleteImages = targetRes.images.filter((image) =>
+      imagesToDeleteId.includes(image._id.toString())
+    );
+    targetRes.images = newImages;
+    if (targetRes.images.length < 3) {
+      return res.json({
+        success: false,
+        message: "Restaurant must contain atleast three images",
+      });
+    }
+    toDeleteImages.map((image) => cloudinary.uploader.destroy(image.fileName));
+  }
+  // if (
+  //   req?.files?.length + targetRes?.images?.length - imagesToDeleteId?.length <
+  //   3
+  // ) {
+  //   return res.json({
+  //     success: false,
+  //     message: "Restaurant cannot have less tham 3 images",
+  //   });
+  // }
+  // const toDeleteImages = targetRes.images.filter((image) =>
+  //   imagesToDeleteId?.includes(image._id.toString())
+  // );
+  // console.log(toDeleteImages);
+  // req.files?.map((file) => {
+  //   targetRes.images.push({ url: file.path, fileName: file.filename });
+  // });
+  // toDeleteImages.map((image) => cloudinary.uploader.destroy(image.fileName));
+  await targetRes.save();
+  res.json({ success: true, message: "checking" });
 };
 
 const addMenu = async (req, res) => {
@@ -253,7 +278,7 @@ const updateEditedMenu = async (req, res) => {
   req.files?.forEach((file) => {
     targetMenu.images.push({ url: file.path, fileName: file.filename });
   });
-
+  //copy below code
   if (imagesToDeleteId) {
     const newImages = targetMenu.images.filter(
       (image) => !imagesToDeleteId.includes(image._id.toString())
@@ -337,5 +362,5 @@ module.exports = {
   fetchMenuDetails,
   updateEditedMenu,
   deleteMenu,
-  logoutClient
+  logoutClient,
 };
