@@ -37,23 +37,35 @@ app.use(express.json());
 // );
 
 // app.set("trust proxy", 1);
-app.use((req, res, next) => {
-  const origin = req.headers.origin;
-  if (
-    origin === "https://zomato06.netlify.app" ||
-    origin === "https://zomato-zar0.onrender.com" ||
-    origin === "http://127.0.0.1:3000/"
-  ) {
-    res.header("Access-Control-Allow-Origin", origin);
-  }
-  res.header("Access-Control-Allow-Credentials", "true");
-  res.header(
-    "Access-Control-Allow-Headers",
-    "Origin, X-Requested-With, Content-Type, Accept"
-  );
-  next();
-});
-// app.use(cors());
+// app.use((req, res, next) => {
+//   const origin = req.headers.origin;
+//   if (
+//     origin === "https://zomato06.netlify.app" ||
+//     origin === "https://zomato-zar0.onrender.com" ||
+//     origin === "http://127.0.0.1:3000/"
+//   ) {
+//     res.header("Access-Control-Allow-Origin", origin);
+//   }
+//   res.header("Access-Control-Allow-Credentials", "true");
+//   res.header(
+//     "Access-Control-Allow-Headers",
+//     "Origin, X-Requested-With, Content-Type, Accept"
+//   );
+//   next();
+// });
+const whitelist = ["http://localhost:3000", "https://zomato06.netlify.app/"];
+app.options("*", cors()); // for enabling preflight req
+const corsOptions = {
+  credentials: true,
+  origin: (origin, callback) => {
+    if (whitelist.indexOf(origin) !== -1 || !origin) {
+      callback(null, true);
+    } else {
+      callback(new Error("Not allowed by CORS"));
+    }
+  },
+};
+app.use(cors(corsOptions));
 app.use(async (req, res, next) => {
   try {
     const getTokenFrom = (req) => {
