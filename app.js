@@ -53,19 +53,12 @@ app.use(express.json());
 //   );
 //   next();
 // });
-const whitelist = ["http://localhost:3000", "https://zomato06.netlify.app/"];
-app.options("*", cors()); // for enabling preflight req
-const corsOptions = {
-  credentials: true,
-  origin: (origin, callback) => {
-    if (whitelist.indexOf(origin) !== -1 || !origin) {
-      callback(null, true);
-    } else {
-      callback(new Error("Not allowed by CORS"));
-    }
-  },
-};
-app.use(cors(corsOptions));
+
+app.use(
+  cors({
+    origin: "https://zomato06.netlify.app",
+  })
+);
 app.use(async (req, res, next) => {
   try {
     const getTokenFrom = (req) => {
