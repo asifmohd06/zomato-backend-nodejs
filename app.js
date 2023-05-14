@@ -14,7 +14,7 @@ const jwtSecret = process.env.TOKEN_SECRET;
 const PORT = 5000;
 
 //Authentication
-mongoose.connect(dbUrl);
+mongoose.connect(dburl);
 
 const dataBase = mongoose.connection;
 
@@ -28,31 +28,6 @@ dataBase.once("connected", () => {
 const app = express();
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
-
-// app.use(
-//   cors({
-//     origin: ["http://127.0.0.1:3000", "http://localhost:3000"],
-//     methods: ["POST", "PUT", "GET", "OPTIONS", "HEAD"],
-//   })
-// );
-
-// app.set("trust proxy", 1);
-// app.use((req, res, next) => {
-//   const origin = req.headers.origin;
-//   if (
-//     origin === "https://zomato06.netlify.app" ||
-//     origin === "https://zomato-zar0.onrender.com" ||
-//     origin === "http://127.0.0.1:3000/"
-//   ) {
-//     res.header("Access-Control-Allow-Origin", origin);
-//   }
-//   res.header("Access-Control-Allow-Credentials", "true");
-//   res.header(
-//     "Access-Control-Allow-Headers",
-//     "Origin, X-Requested-With, Content-Type, Accept"
-//   );
-//   next();
-// });
 
 app.use(
   cors({
