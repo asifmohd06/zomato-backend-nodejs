@@ -9,8 +9,8 @@ module.exports.isAlreadyLoggedIn = async (req, res, next) => {
       success: true,
       isAlreadyLoggedIn: true,
       message: "already logged in",
-      username: user.username,
-      email: user.email,
+      username: req.user.username,
+      email: req.user.email,
     });
   }
 

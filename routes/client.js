@@ -15,6 +15,7 @@ const {
   updateEditedMenu,
   deleteMenu,
   logoutClient,
+  deleteRestaurant,
 } = require("../controllers/clients");
 
 //middlewares
@@ -68,6 +69,7 @@ router.put(
   asyncError(updateEditedMenu)
 );
 router.patch("/restaurants/deletemenu", asyncError(deleteMenu));
+router.delete("/restaurants/delete/:id", asyncError(deleteRestaurant));
 
 router.post("/logout", asyncError(logoutClient));
 module.exports = router;

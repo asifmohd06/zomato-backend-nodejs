@@ -5,8 +5,10 @@ const cors = require("cors");
 const express = require("express");
 const jwt = require("jsonwebtoken");
 const mongoose = require("mongoose");
-const dbUrl = process.env.MONGO_DB_URL;
 const localDbUrl = "mongodb://localhost:27017/zomato";
+const localOrigin = process.env.LOCAL_ORIGIN;
+const dbUrl = process.env.MONGO_DB_URL;
+const mainOrigin = process.env.MAIN_ORIGIN;
 const clientRoute = require("./routes/client");
 const routes = require("./routes/users");
 const client = require("./models/clients");
@@ -14,7 +16,7 @@ const jwtSecret = process.env.TOKEN_SECRET;
 const PORT = 5000;
 
 //Authentication
-mongoose.connect(dburl);
+mongoose.connect(dbUrl);
 
 const dataBase = mongoose.connection;
 
@@ -31,7 +33,7 @@ app.use(express.json());
 
 app.use(
   cors({
-    origin: "https://zomato06.netlify.app",
+    origin: mainOrigin,
   })
 );
 app.use(async (req, res, next) => {

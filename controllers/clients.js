@@ -4,6 +4,7 @@ const client = require("../models/clients");
 const restaurant = require("../models/restaurants");
 const bcrypt = require("bcryptjs");
 const jwtSecret = process.env.TOKEN_SECRET;
+const mongoose = require("mongoose");
 
 const { cloudinary } = require("../cloudinary");
 
@@ -86,23 +87,6 @@ const submitEditRestaurant = async (req, res) => {
     }
     toDeleteImages.map((image) => cloudinary.uploader.destroy(image.fileName));
   }
-  // if (
-  //   req?.files?.length + targetRes?.images?.length - imagesToDeleteId?.length <
-  //   3
-  // ) {
-  //   return res.json({
-  //     success: false,
-  //     message: "Restaurant cannot have less tham 3 images",
-  //   });
-  // }
-  // const toDeleteImages = targetRes.images.filter((image) =>
-  //   imagesToDeleteId?.includes(image._id.toString())
-  // );
-  // console.log(toDeleteImages);
-  // req.files?.map((file) => {
-  //   targetRes.images.push({ url: file.path, fileName: file.filename });
-  // });
-  // toDeleteImages.map((image) => cloudinary.uploader.destroy(image.fileName));
   await targetRes.save();
   res.json({ success: true, message: "checking" });
 };
@@ -325,6 +309,41 @@ const deleteMenu = async (req, res) => {
   }
   res.json({ success: false, message: "Unable to delete that menu" });
 };
+
+const deleteRestaurant = async (req, res) => {
+  const restaurantId = req.params.id;
+  // const targetRes = await restaurant.findById(id);
+  // console.log(targetRes);
+  // const cityName = targetRes.name;
+
+  // const deleteRestaurant = async (restaurantId) => {
+  //   try {
+  //     await restaurant.deleteOne({ _id: restaurantId });
+  //     console.log("Restaurant deleted successfully");
+  //   } catch (error) {
+  //     console.error("Error deleting restaurant:", error);
+  //   }
+  // }; // working
+
+  // city
+  //   .findOneAndUpdate(
+  //     { name: cityName },
+  //     { $pull: { restaurants: restaurantId } },
+  //     { new: true }
+  //   )
+  //   .then((updatedCity) => {
+  //     if (updatedCity) {
+  //       console.log("Restaurant ID removed from the city:", updatedCity);
+  //     } else {
+  //       console.log("City not found");
+  //     }
+  //   })
+  //   .catch((error) => {
+  //     console.error("Error removing restaurant ID from the city:", error);
+  //   });
+
+  res.json({ success: false, message: "this feature  is under development" });
+};
 const logoutClient = (req, res) => {
   if (!req.user) {
     res
@@ -363,4 +382,5 @@ module.exports = {
   updateEditedMenu,
   deleteMenu,
   logoutClient,
+  deleteRestaurant,
 };
