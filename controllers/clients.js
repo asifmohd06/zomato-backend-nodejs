@@ -312,37 +312,58 @@ const deleteMenu = async (req, res) => {
 
 const deleteRestaurant = async (req, res) => {
   const restaurantId = req.params.id;
-  // const targetRes = await restaurant.findById(id);
-  // console.log(targetRes);
-  // const cityName = targetRes.name;
+  const targetRes = await restaurant.findById(restaurantId);
+  const cityName = targetRes?.city;
+  const ownerId = targetRes?.owner;
 
-  // const deleteRestaurant = async (restaurantId) => {
-  //   try {
-  //     await restaurant.deleteOne({ _id: restaurantId });
-  //     console.log("Restaurant deleted successfully");
-  //   } catch (error) {
-  //     console.error("Error deleting restaurant:", error);
-  //   }
-  // }; // working
+  const deleteRestaurant = async (restaurantId) => {
+    try {
+      await restaurant.deleteOne({ _id: restaurantId });
+    } catch (error) {
+      console.error("Error deleting restaurant:", error);
+      return res.json({ success: false, message: "Error deleting Restaurant" });
+    }
+  }; // working
 
-  // city
-  //   .findOneAndUpdate(
-  //     { name: cityName },
-  //     { $pull: { restaurants: restaurantId } },
-  //     { new: true }
-  //   )
-  //   .then((updatedCity) => {
-  //     if (updatedCity) {
-  //       console.log("Restaurant ID removed from the city:", updatedCity);
-  //     } else {
-  //       console.log("City not found");
-  //     }
-  //   })
-  //   .catch((error) => {
-  //     console.error("Error removing restaurant ID from the city:", error);
-  //   });
-
-  res.json({ success: false, message: "this feature  is under development" });
+  city
+    .findOneAndUpdate(
+      { name: cityName },
+      { $pull: { restaurants: restaurantId } },
+      { new: true }
+    )
+    .then((updatedCity) => {
+      if (updatedCity) {
+        // console.log("Restaurant ID removed from the city:", updatedCity);
+      } else {
+        console.log("City not found");
+        return res.json({
+          success: false,
+          message: "Error deleting Restaurant",
+        });
+      }
+    })
+    .catch((error) => {
+      console.error("Error removing restaurant ID from the city:", error);
+      return res.json({ success: false, message: "Error deleting Restaurant" });
+    });
+  client.findByIdAndUpdate(
+    ownerId,
+    { $unset: { restaurants: 1 } },
+    { new: true },
+    (err, updatedClient) => {
+      if (err) {
+        console.error(err);
+        res.json({ success: false, message: "Error deleting Restaurant" });
+      } else {
+        console.log(
+          "successfully removed restaurant id from client",
+          updatedClient
+        );
+      }
+    }
+  );
+  deleteRestaurant(restaurantId);
+  res.json({ success: true, message: "Successfully deleted your Restaurant" });
 };
 const logoutClient = (req, res) => {
   if (!req.user) {
@@ -353,21 +374,6 @@ const logoutClient = (req, res) => {
   }
   res.json({ success: true });
 };
-
-// export {
-//   addrestaurant,
-//   submitEditRestaurant,
-//   fetchEditrestaurant,
-//   addMenu,
-//   registerClient,
-//   loginClient,
-//   authenticateClient,
-//   fetchClientOwnedRestaurant,
-//   fetchMenuDetails,
-//   updateEditedMenu,
-//   deleteMenu,
-//   logoutClient,
-// };
 
 module.exports = {
   addrestaurant,
